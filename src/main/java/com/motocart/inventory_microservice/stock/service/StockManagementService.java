@@ -1,11 +1,13 @@
 package com.motocart.inventory_microservice.stock.service;
 
+import com.motocart.inventory_microservice.kafka.InventoryEventPublisher;
 import com.motocart.library.common.dto.StockDTO;
 import com.motocart.library.common.event.InventoryEvent;
 import com.motocart.inventory_microservice.stock.entity.StockEntity;
 import com.motocart.inventory_microservice.stock.repository.StockRepository;
 import com.motocart.inventory_microservice.warehouse.entity.WarehouseEntity;
 import com.motocart.inventory_microservice.warehouse.repository.WarehouseRepository;
+import com.motocart.library.common.types.InventoryActionType;
 import com.motocart.library.common.types.Permission;
 import com.motocart.library.security.authentication.EntitlementService;
 import lombok.extern.slf4j.Slf4j;
@@ -24,11 +26,14 @@ public class StockManagementService {
     private final StockRepository stockRepository;
     private final WarehouseRepository warehouseRepository;
     private final EntitlementService entitlementService;
+    private final InventoryEventPublisher eventPublisher;
 
-    public StockManagementService(StockRepository stockRepository, WarehouseRepository warehouseRepository, EntitlementService entitlementService) {
+    public StockManagementService(StockRepository stockRepository, WarehouseRepository warehouseRepository,
+                                  EntitlementService entitlementService, InventoryEventPublisher eventPublisher) {
         this.stockRepository = stockRepository;
         this.warehouseRepository = warehouseRepository;
         this.entitlementService = entitlementService;
+        this.eventPublisher = eventPublisher;
     }
 
     public void addStock(StockDTO stockDTO) {
@@ -44,6 +49,7 @@ public class StockManagementService {
                 .build();
         stockRepository.save(stock);
         log.debug("Added stock for productId: {} in warehouseId: {}", stockDTO.getProductId(), stockDTO.getWarehouseId());
+        eventPublisher.publishStockAdded(stockDTO.getProductId(), stockDTO.getWarehouseId(), stockDTO.getQuantity());
     }
 
     public void updateStock(StockDTO stockDTO) {
@@ -54,6 +60,7 @@ public class StockManagementService {
         stock.setLastUpdated(Instant.now());
         stockRepository.save(stock);
         log.debug("Updated stock for productId: {} in warehouseId: {}", stockDTO.getProductId(), stockDTO.getWarehouseId());
+        eventPublisher.publishStockUpdated(stockDTO.getProductId(), stockDTO.getWarehouseId(), stockDTO.getQuantity());
     }
 
     public StockDTO checkStock(int productId) {
@@ -91,6 +98,7 @@ public class StockManagementService {
         }
         stockRepository.saveAll(stockByProduct.values().stream().flatMap(List::stream).toList());
         log.debug("Reserved stock for orderId: {}", event.getOrderId());
+        eventPublisher.publishInventoryAction(event, InventoryActionType.RESERVE);
     }
 
     @Transactional
@@ -113,6 +121,7 @@ public class StockManagementService {
         }
         stockRepository.saveAll(stockByProduct.values().stream().flatMap(List::stream).toList());
         log.debug("Released stock for orderId: {}", event.getOrderId());
+        eventPublisher.publishInventoryAction(event, InventoryActionType.RELEASE);
     }
 
     @Transactional
@@ -136,6 +145,7 @@ public class StockManagementService {
         }
         stockRepository.saveAll(stockByProduct.values().stream().flatMap(List::stream).toList());
         log.debug("Deducted stock for orderId: {}", event.getOrderId());
+        eventPublisher.publishInventoryAction(event, InventoryActionType.DEDUCT);
     }
 
     private Map<Integer, Integer> toProductQtyMap(List<InventoryEvent.ProductQuantityPair> pairs) {

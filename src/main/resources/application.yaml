@@ -48,6 +48,11 @@ management:
     health:
       show-details: always
 
+motocart:
+  kafka:
+    producer: enabled
+    notification: true
+
 eureka:
   client:
     service-url:
