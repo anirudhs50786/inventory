@@ -13,6 +13,8 @@ public interface StockRepository extends JpaRepository<StockEntity, Integer> {
 
     List<StockEntity> findAllByProductId(int productId);
 
+    List<StockEntity> findAllByProductIdIn(List<Integer> productIds);
+
     Optional<StockEntity> findByProductIdAndWarehouse_WarehouseId(int productId, int warehouseId);
 
     @Query("SELECT COALESCE(SUM(s.quantity - s.reservedQuantity), 0) FROM StockEntity s WHERE s.productId = :productId")

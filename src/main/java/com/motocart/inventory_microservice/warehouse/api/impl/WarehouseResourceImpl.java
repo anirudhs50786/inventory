@@ -8,6 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/warehouse")
 @Slf4j
@@ -19,14 +21,25 @@ public class WarehouseResourceImpl implements WarehouseResource {
         this.warehouseManagement = warehouseManagement;
     }
 
+    @GetMapping(produces = "application/json")
+    @Override
+    public ResponseEntity<List<WarehouseDTO>> getAllWarehouses() {
+        try {
+            return ResponseEntity.ok(warehouseManagement.getAllWarehouses());
+        } catch (RuntimeException e) {
+            log.error("Error fetching warehouses: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
     @PostMapping(produces = "application/json")
     @Override
     public ResponseEntity<String> addWarehouse(@RequestBody WarehouseDTO warehouseDTO) {
         try {
             warehouseManagement.addWarehouse(warehouseDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body("Warehouse created successfully");
-        } catch (Exception e) {
-            log.error("Error creating warehouse: {}", e.getMessage());
+        } catch (RuntimeException e) {
+            log.error("Error creating warehouse: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to create warehouse");
         }
     }
@@ -38,10 +51,10 @@ public class WarehouseResourceImpl implements WarehouseResource {
             warehouseManagement.updateWarehouse(warehouseDTO);
             return ResponseEntity.status(HttpStatus.OK).body("Warehouse updated successfully");
         } catch (IllegalArgumentException e) {
-            log.error("Warehouse not found: {}", e.getMessage());
+            log.error("Warehouse not found: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (Exception e) {
-            log.error("Error updating warehouse: {}", e.getMessage());
+        } catch (RuntimeException e) {
+            log.error("Error updating warehouse: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to update warehouse");
         }
     }
@@ -53,10 +66,10 @@ public class WarehouseResourceImpl implements WarehouseResource {
             warehouseManagement.deactivateWarehouse(warehouseId);
             return ResponseEntity.status(HttpStatus.OK).body("Warehouse deactivated successfully");
         } catch (IllegalArgumentException e) {
-            log.error("Warehouse not found: {}", e.getMessage());
+            log.error("Warehouse not found: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (Exception e) {
-            log.error("Error deleting warehouse: {}", e.getMessage());
+        } catch (RuntimeException e) {
+            log.error("Error deleting warehouse: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to delete warehouse");
         }
     }

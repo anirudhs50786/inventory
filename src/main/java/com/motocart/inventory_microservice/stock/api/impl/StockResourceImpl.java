@@ -26,10 +26,10 @@ public class StockResourceImpl implements StockResource {
             stockManagementService.addStock(stockDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body("Stock added successfully");
         } catch (IllegalArgumentException e) {
-            log.error("Invalid request for addStock: {}", e.getMessage());
+            log.error("Invalid request for addStock: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
-            log.error("Error adding stock: {}", e.getMessage());
+            log.error("Error adding stock: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to add stock");
         }
     }
@@ -41,10 +41,10 @@ public class StockResourceImpl implements StockResource {
             stockManagementService.updateStock(stockDTO);
             return ResponseEntity.status(HttpStatus.OK).body("Stock updated successfully");
         } catch (IllegalArgumentException e) {
-            log.error("Stock record not found: {}", e.getMessage());
+            log.error("Stock record not found: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
-            log.error("Error updating stock: {}", e.getMessage());
+            log.error("Error updating stock: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to update stock");
         }
     }
@@ -56,7 +56,7 @@ public class StockResourceImpl implements StockResource {
             StockDTO stockDTO = stockManagementService.checkStock(productId);
             return ResponseEntity.status(HttpStatus.OK).body(stockDTO);
         } catch (Exception e) {
-            log.error("Error checking stock for productId {}: {}", productId, e.getMessage());
+            log.error("Error checking stock for productId {}: {}", productId, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
