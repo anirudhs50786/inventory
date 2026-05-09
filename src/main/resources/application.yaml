@@ -48,10 +48,16 @@ management:
     health:
       show-details: always
 
-motocart:
+moto-cart:
   kafka:
-    producer: enabled
-    notification: true
+    bootstrap-servers: localhost:9092
+    producer:
+      enabled: true
+    notification:
+      enabled: true
+  inventory:
+    low-stock-threshold: 10
+    admin-email: admin@motocart.com
 
 eureka:
   client:

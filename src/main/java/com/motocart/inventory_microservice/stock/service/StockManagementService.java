@@ -11,6 +11,7 @@ import com.motocart.library.common.types.InventoryActionType;
 import com.motocart.library.common.types.Permission;
 import com.motocart.library.security.authentication.EntitlementService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +23,12 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class StockManagementService {
+
+    @Value("${moto-cart.inventory.low-stock-threshold:10}")
+    private int lowStockThreshold;
+
+    @Value("${moto-cart.inventory.admin-email}")
+    private String adminEmail;
 
     private final StockRepository stockRepository;
     private final WarehouseRepository warehouseRepository;
@@ -146,6 +153,17 @@ public class StockManagementService {
         stockRepository.saveAll(stockByProduct.values().stream().flatMap(List::stream).toList());
         log.debug("Deducted stock for orderId: {}", event.getOrderId());
         eventPublisher.publishInventoryAction(event, InventoryActionType.DEDUCT);
+        checkAndAlertLowStock(stockByProduct);
+    }
+
+    private void checkAndAlertLowStock(Map<Integer, List<StockEntity>> stockByProduct) {
+        stockByProduct.forEach((productId, stocks) -> {
+            int available = stocks.stream().mapToInt(s -> s.getQuantity() - s.getReservedQuantity()).sum();
+            if (available <= lowStockThreshold) {
+                log.warn("Low stock alert for productId: {}, available: {}", productId, available);
+                eventPublisher.publishLowStockAlert(productId, available, adminEmail);
+            }
+        });
     }
 
     private Map<Integer, Integer> toProductQtyMap(List<InventoryEvent.ProductQuantityPair> pairs) {

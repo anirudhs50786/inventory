@@ -74,14 +74,6 @@ public class InventoryEventPublisher {
                 .sourceService(SERVICE_NAME)
                 .timeStamp(Instant.now())
                 .build());
-
-        if (notificationEnabled && actionType == InventoryActionType.DEDUCT) {
-            notificationEventProducer.sendNotificationEvent(NotificationEvent.builder()
-                    .notificationType(NotificationType.ORDER_COMPLETE)
-                    .subject("Your order has been confirmed")
-                    .payload(Map.of("orderId", event.getOrderId()))
-                    .build());
-        }
     }
 
     @Async("inventoryExecutor")
