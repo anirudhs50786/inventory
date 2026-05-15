@@ -37,4 +37,13 @@ public class StockEntity {
 
     @Column(name = "last_updated")
     private Instant lastUpdated;
+
+    public StockEntity(StockEntity stockEntity) {
+        this.stockId = stockEntity.getStockId();
+        this.productId = stockEntity.getProductId();
+        this.warehouse = stockEntity.getWarehouse();
+        this.quantity = stockEntity.getQuantity();
+        this.reservedQuantity = stockEntity.getReservedQuantity();
+        this.lastUpdated = stockEntity.getLastUpdated();
+    }
 }

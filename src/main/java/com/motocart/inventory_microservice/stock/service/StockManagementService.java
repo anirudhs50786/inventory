@@ -56,18 +56,19 @@ public class StockManagementService {
                 .build();
         stockRepository.save(stock);
         log.debug("Added stock for productId: {} in warehouseId: {}", stockDTO.getProductId(), stockDTO.getWarehouseId());
-        eventPublisher.publishStockAdded(stockDTO.getProductId(), stockDTO.getWarehouseId(), stockDTO.getQuantity());
+        eventPublisher.publishStockAdded(stock);
     }
 
     public void updateStock(StockDTO stockDTO) {
         entitlementService.canAccess(Permission.STOCK_UPDATE);
         StockEntity stock = stockRepository.findByProductIdAndWarehouse_WarehouseId(stockDTO.getProductId(), stockDTO.getWarehouseId())
                 .orElseThrow(() -> new IllegalArgumentException("Stock record not found for productId: " + stockDTO.getProductId() + " in warehouseId: " + stockDTO.getWarehouseId()));
+        StockEntity stockOriginal = new StockEntity(stock);
         stock.setQuantity(stockDTO.getQuantity());
         stock.setLastUpdated(Instant.now());
         stockRepository.save(stock);
         log.debug("Updated stock for productId: {} in warehouseId: {}", stockDTO.getProductId(), stockDTO.getWarehouseId());
-        eventPublisher.publishStockUpdated(stockDTO.getProductId(), stockDTO.getWarehouseId(), stockDTO.getQuantity());
+        eventPublisher.publishStockUpdated(stockOriginal, stock);
     }
 
     public StockDTO checkStock(int productId) {
